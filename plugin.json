@@ -1,0 +1,8 @@
+{
+    "$schema": "https://raw.githubusercontent.com/SteamClientHomebrew/Millennium/main/src/sys/plugin-schema.json",
+
+    "name": "steam-taskbar-progress",
+    "common_name": "Taskbar Download progress",
+    "description": "Display the Steam download status on the Windows taskbar",
+    "versionj": "1.0.0"
+}
