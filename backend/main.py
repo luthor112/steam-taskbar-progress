@@ -29,14 +29,10 @@ class Backend:
         if percent == -1:
             progress.setProgress(0)
             progress.setState('normal')
-        if percent == 100:
-            progress.setProgress(100)
-            progress.setState('done')
-            time.sleep(1)
+        elif percent == 100:
             progress.setProgress(0)
-            progress.setState('normal')
+            progress.setState('done')
         else:
-            progress.setState('loading')
             progress.setProgress(percent)
         return True
 
