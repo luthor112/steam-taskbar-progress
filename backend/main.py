@@ -1,11 +1,17 @@
 import Millennium, PluginUtils # type: ignore
 logger = PluginUtils.Logger()
 
+import json
+import os
 import sys
 
 if sys.platform == "win32":
     import pygetwindow
     import PyTaskbar
+
+def get_config():
+    with open(os.path.join(PLUGIN_BASE_DIR, "config.json"), "rt") as fp:
+        return json.load(fp)
 
 class Backend:
     @staticmethod
@@ -35,6 +41,12 @@ class Backend:
         else:
             progress.setProgress(percent)
         return True
+
+    @staticmethod
+    def get_use_old_detection():
+        use_old_detection = get_config()["use_old_detection"]
+        logger.log(f"get_use_old_detection() -> {use_old_detection}")
+        return use_old_detection
 
 class Plugin:
     def _front_end_loaded(self):
