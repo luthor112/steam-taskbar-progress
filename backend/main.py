@@ -9,6 +9,9 @@ if sys.platform == "win32":
     import pygetwindow
     import PyTaskbar
 
+last_steam_hwnd = 0
+progress = None
+
 def get_config():
     with open(os.path.join(PLUGIN_BASE_DIR, "config.json"), "rt") as fp:
         return json.load(fp)
@@ -16,6 +19,8 @@ def get_config():
 class Backend:
     @staticmethod
     def set_progress_percent(percent):
+        global last_steam_hwnd
+        global progress
         logger.log(f"set_progress_percent({percent})")
 
         if sys.platform != "win32":
@@ -27,10 +32,13 @@ class Backend:
                 steam_hwnd = wnd._hWnd
 
         if steam_hwnd is None:
+            last_steam_hwnd = 0
             return False
 
-        progress = PyTaskbar.Progress(steam_hwnd)
-        progress.init()
+        if steam_hwnd != last_steam_hwnd:
+            progress = PyTaskbar.Progress(steam_hwnd)
+            progress.init()
+            last_steam_hwnd = steam_hwnd
 
         if percent == -1:
             progress.setProgress(0)
