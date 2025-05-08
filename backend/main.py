@@ -9,6 +9,7 @@ if sys.platform == "win32":
     import pygetwindow
     import PyTaskbar
 
+warning_status = False
 last_steam_hwnd = 0
 progress = None
 
@@ -19,6 +20,7 @@ def get_config():
 class Backend:
     @staticmethod
     def set_progress_percent(percent):
+        global warning_status
         global last_steam_hwnd
         global progress
         logger.log(f"set_progress_percent({percent})")
@@ -43,10 +45,18 @@ class Backend:
         if percent == -1:
             progress.setProgress(0)
             progress.setState('normal')
+            warning_status = False
+        elif percent == -2:
+            progress.setState('warning')
+            warning_status = True
         elif percent == 100:
             progress.setProgress(0)
             progress.setState('done')
+            warning_status = False
         else:
+            if warning_status:
+                progress.setState('normal')
+                warning_status = False
             progress.setProgress(percent)
         return True
 

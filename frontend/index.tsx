@@ -43,7 +43,10 @@ export default async function PluginMain() {
         g_PopupManager.AddPopupCreatedCallback(OnPopupCreation);
     } else {
         SteamClient.Downloads.RegisterForDownloadOverview(async (event) => {
-            if (event.update_state === "Downloading") {
+            if (event.paused) {
+                console.log("[steam-taskbar-progress] Download paused");
+                await set_progress_percent({ percent: -2 });
+            } else if (event.update_state === "Downloading") {
                 console.log("[steam-taskbar-progress] Download percentage:", event.overall_percent_complete);
                 await set_progress_percent({ percent: event.overall_percent_complete });
             } else {
