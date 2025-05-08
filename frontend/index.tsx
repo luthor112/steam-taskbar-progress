@@ -20,8 +20,14 @@ async function OnPopupCreation(popup: any) {
                 console.log("[steam-taskbar-progress] Porgress bar percentage:", realPercent);
                 await set_progress_percent({ percent: realPercent });
             } else {
-                console.log("[steam-taskbar-progress] Download disappeared...");
-                await set_progress_percent({ percent: -1 });
+                const queueMessage = downloadStatusPlace.querySelector(`div.${findModule(e => e.Queue).Queue}`);
+                if (queueMessage && queueMessage.textContent.startsWith(findModule(e => e.BottomBar_DownloadsPaused).BottomBar_DownloadsPaused)) {
+                    console.log("[steam-taskbar-progress] Download paused");
+                    await set_progress_percent({ percent: -2 });
+                } else {
+                    console.log("[steam-taskbar-progress] Download disappeared...");
+                    await set_progress_percent({ percent: -1 });
+                }
             }
         });
         downloadStatusPlaceObserver.observe(downloadStatusPlace, { childList: true, attributes: true, subtree: true });
