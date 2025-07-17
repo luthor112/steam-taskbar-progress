@@ -1,17 +1,18 @@
 import Millennium, PluginUtils # type: ignore
 logger = PluginUtils.Logger()
 
+import ctypes
 import json
 import os
 import sys
 
 if sys.platform == "win32":
     import pygetwindow
-    import PyTaskbar
+    from pytaskbr import taskbar, TBPFlag
+    taskbar.HrInit()
 
-warning_status = False
-last_steam_hwnd = 0
-progress = None
+MAX_PROGRESS = 100
+
 
 def get_config():
     with open(os.path.join(PLUGIN_BASE_DIR, "config.json"), "rt") as fp:
@@ -20,9 +21,6 @@ def get_config():
 class Backend:
     @staticmethod
     def set_progress_percent(percent):
-        global warning_status
-        global last_steam_hwnd
-        global progress
         logger.log(f"set_progress_percent({percent})")
 
         if sys.platform != "win32":
@@ -34,30 +32,18 @@ class Backend:
                 steam_hwnd = wnd._hWnd
 
         if steam_hwnd is None:
-            last_steam_hwnd = 0
             return False
 
-        if steam_hwnd != last_steam_hwnd:
-            progress = PyTaskbar.Progress(steam_hwnd)
-            progress.init()
-            last_steam_hwnd = steam_hwnd
-
         if percent == -1:
-            progress.setProgress(0)
-            progress.setState('normal')
-            warning_status = False
+            taskbar.SetProgressState(steam_hwnd, TBPFlag.noProgress)
         elif percent == -2:
-            progress.setState('warning')
-            warning_status = True
+            taskbar.SetProgressState(steam_hwnd, TBPFlag.paused)
         elif percent == 100:
-            progress.setProgress(0)
-            progress.setState('done')
-            warning_status = False
+            taskbar.SetProgressState(steam_hwnd, TBPFlag.noProgress)
+            ctypes.windll.user32.FlashWindow(steam_hwnd, True)
         else:
-            if warning_status:
-                progress.setState('normal')
-                warning_status = False
-            progress.setProgress(percent)
+            taskbar.SetProgressState(steam_hwnd, TBPFlag.normal)
+            taskbar.setProgressValue(steam_hwnd, percent, MAX_PROGRESS)
         return True
 
     @staticmethod
