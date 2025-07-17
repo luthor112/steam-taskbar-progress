@@ -13,7 +13,15 @@ A Millennium plugin that displays the Steam download status on the Windows taskb
 - [Millennium](https://steambrew.app/)
 
 ## Known issues:
-- First startup is slow because of the dependencies
+- First startup is slow because of dependency installation
+
+## Contributors
+
+<a href="https://github.com/luthor112/steam-taskbar-progress/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=luthor112/steam-taskbar-progress" />
+</a>
+
+Made with [contrib.rocks](https://contrib.rocks).
 
 ## Troubleshooting
 
