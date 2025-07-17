@@ -4,6 +4,7 @@ logger = PluginUtils.Logger()
 import ctypes
 import json
 import os
+import subprocess
 import sys
 
 if sys.platform == "win32":
@@ -13,6 +14,7 @@ if sys.platform == "win32":
 
 MAX_PROGRESS = 100
 
+completion_task = 0
 
 def get_config():
     with open(os.path.join(PLUGIN_BASE_DIR, "config.json"), "rt") as fp:
@@ -21,6 +23,7 @@ def get_config():
 class Backend:
     @staticmethod
     def set_progress_percent(percent):
+        global completion_task
         logger.log(f"set_progress_percent({percent})")
 
         if sys.platform != "win32":
@@ -41,6 +44,12 @@ class Backend:
         elif percent == 100:
             taskbar.SetProgressState(steam_hwnd, TBPFlag.noProgress)
             ctypes.windll.user32.FlashWindow(steam_hwnd, True)
+            if completion_task == 1:
+                ctypes.windll.user32.ExitWindowsEx(0x00000008, 0x00000000)
+                completion_task = 0
+            elif completion_task == 2:
+                subprocess.Popen(get_config()["custom_command"])
+                completion_task = 0
         else:
             taskbar.SetProgressState(steam_hwnd, TBPFlag.normal)
             taskbar.setProgressValue(steam_hwnd, percent, MAX_PROGRESS)
@@ -51,6 +60,13 @@ class Backend:
         use_old_detection = get_config()["use_old_detection"]
         logger.log(f"get_use_old_detection() -> {use_old_detection}")
         return use_old_detection
+
+    @staticmethod
+    def set_completion_task(new_value):
+        global completion_task
+        logger.log(f"set_completion_task({new_value})")
+        completion_task = new_value
+        return True
 
 class Plugin:
     def _front_end_loaded(self):
