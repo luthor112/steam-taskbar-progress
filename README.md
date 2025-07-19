@@ -5,6 +5,8 @@ A Millennium plugin that displays the Steam download status on the Windows taskb
 ## Features
 - Displays the Steam download status on the Windows taskbar
     - This functionality is only supported on Windows
+- Shutdown or run a command when a download completes
+    - Right click the download indicator to use
 
 ## Configuration
 - `<STEAM>\plugins\steam-librarian\config.json`

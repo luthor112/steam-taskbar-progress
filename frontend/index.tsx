@@ -1,4 +1,4 @@
-import { callable, findClassModule, findModule, Millennium, Menu, MenuItem, showContextMenu } from "@steambrew/client";
+import { callable, findClassModule, findModule, Millennium, Menu, MenuItem, showContextMenu, sleep } from "@steambrew/client";
 
 // Backend functions
 const set_progress_percent = callable<[{ percent: number }], boolean>('Backend.set_progress_percent');
@@ -9,7 +9,9 @@ const WaitForElement = async (sel: string, parent = document) =>
 	[...(await Millennium.findElement(parent, sel))][0];
 
 async function OnPopupCreation(popup: any) {
+    console.log("[steam-taskbar-progress] Popup created, checking...");
     if (popup.m_strName === "SP Desktop_uid0") {
+        console.log("[steam-taskbar-progress] Main window found");
         const downloadStatusPlace = await WaitForElement(`div.${findModule(e => e.DownloadStatusContent).DownloadStatusContent}`, popup.m_popup.document);
 
         const oldDetection = await get_use_old_detection({});
@@ -35,10 +37,12 @@ async function OnPopupCreation(popup: any) {
                 }
             });
             downloadStatusPlaceObserver.observe(downloadStatusPlace, { childList: true, attributes: true, subtree: true });
+            console.log("[steam-taskbar-progress] Using old detection method - observer started");
         }
 
         // Add menu
         downloadStatusPlace.addEventListener("contextmenu", async () => {
+            console.log("[steam-taskbar-progress] Right click detected, showing context menu...");
             showContextMenu(
                 <Menu label="Download Options">
                     <MenuItem onClick={async () => {
@@ -55,11 +59,13 @@ async function OnPopupCreation(popup: any) {
                 { bForcePopup: true }
             );
         });
+        console.log("[steam-taskbar-progress] Registered for right click");
     }
 }
 
 export default async function PluginMain() {
     console.log("[steam-taskbar-progress] Frontend startup");
+    await sleep(1000);  // Hopefully temporary workaround
 
     const oldDetection = await get_use_old_detection({});
     console.log("[steam-taskbar-progress] Use old detection method:", oldDetection);
@@ -72,17 +78,33 @@ export default async function PluginMain() {
     g_PopupManager.AddPopupCreatedCallback(OnPopupCreation);
 
     if (!oldDetection) {
+        var current_download_appid = 0;
+
         SteamClient.Downloads.RegisterForDownloadOverview(async (event) => {
+            console.log(event);
             if (event.paused) {
                 console.log("[steam-taskbar-progress] Download paused");
                 await set_progress_percent({ percent: -2 });
             } else if (event.update_state === "Downloading") {
                 console.log("[steam-taskbar-progress] Download percentage:", event.overall_percent_complete);
                 await set_progress_percent({ percent: event.overall_percent_complete });
+                current_download_appid = event.update_appid;
             } else {
                 console.log("[steam-taskbar-progress] No download in progress");
                 await set_progress_percent({ percent: -1 });
             }
         });
+
+        SteamClient.Downloads.RegisterForDownloadItems(async (isDownloading, downloadItems) => {
+            const current_app = downloadItems.find((el) => el.appid === current_download_appid);
+            if (current_app) {
+                if (current_app.completed) {
+                    await set_progress_percent({ percent: 100 });
+                    current_download_appid = 0;
+                }
+            }
+        });
+
+        console.log("[steam-taskbar-progress] Using new detection method - registered for download events");
     }
 }

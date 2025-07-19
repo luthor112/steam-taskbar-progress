@@ -20,6 +20,15 @@ def get_config():
     with open(os.path.join(PLUGIN_BASE_DIR, "config.json"), "rt") as fp:
         return json.load(fp)
 
+def run_completion_task():
+    global completion_task
+    if completion_task == 1:
+        subprocess.Popen(["shutdown", "/s", "/t", "0"])
+        completion_task = 0
+    elif completion_task == 2:
+        subprocess.Popen(get_config()["custom_command"])
+        completion_task = 0
+
 class Backend:
     @staticmethod
     def set_progress_percent(percent):
@@ -44,12 +53,7 @@ class Backend:
         elif percent == 100:
             taskbar.SetProgressState(steam_hwnd, TBPFlag.noProgress)
             ctypes.windll.user32.FlashWindow(steam_hwnd, True)
-            if completion_task == 1:
-                ctypes.windll.user32.ExitWindowsEx(0x00000008, 0x00000000)
-                completion_task = 0
-            elif completion_task == 2:
-                subprocess.Popen(get_config()["custom_command"])
-                completion_task = 0
+            run_completion_task()
         else:
             taskbar.SetProgressState(steam_hwnd, TBPFlag.normal)
             taskbar.setProgressValue(steam_hwnd, percent, MAX_PROGRESS)
