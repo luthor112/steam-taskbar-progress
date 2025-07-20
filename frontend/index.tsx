@@ -54,6 +54,12 @@ async function OnPopupCreation(popup: any) {
                     <MenuItem onClick={async () => {
                         await set_completion_task({ new_value: 0});
                     }}> Do nothing after completion </MenuItem>
+                    <MenuItem onClick={async () => {
+                        SteamClient.Downloads.EnableAllDownloads(true);
+                    }}> Start all downloads </MenuItem>
+                    <MenuItem onClick={async () => {
+                        SteamClient.Downloads.EnableAllDownloads(false);
+                    }}> Stop all downloads </MenuItem>
                 </Menu>,
                 downloadStatusPlace,
                 { bForcePopup: true }
