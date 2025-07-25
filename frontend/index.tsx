@@ -71,7 +71,14 @@ async function OnPopupCreation(popup: any) {
 
 export default async function PluginMain() {
     console.log("[steam-taskbar-progress] Frontend startup");
-    await sleep(1000);  // Hopefully temporary workaround
+    while (
+        typeof g_PopupManager === 'undefined' ||
+        typeof MILLENNIUM_API === 'undefined' ||
+        typeof MILLENNIUM_BACKEND_IPC === 'undefined' ||
+        typeof MainWindowBrowserManager === 'undefined'
+    ) {
+        await sleep(100);
+    }
 
     const oldDetection = await get_use_old_detection({});
     console.log("[steam-taskbar-progress] Use old detection method:", oldDetection);
