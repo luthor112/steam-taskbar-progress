@@ -4,6 +4,7 @@ logger = PluginUtils.Logger()
 import ctypes
 import json
 import os
+import shutil
 import subprocess
 import sys
 
@@ -17,7 +18,12 @@ MAX_PROGRESS = 100
 completion_task = 0
 
 def get_config():
-    with open(os.path.join(PLUGIN_BASE_DIR, "config.json"), "rt") as fp:
+    config_fname = os.path.join(PLUGIN_BASE_DIR, "config.json")
+    if not os.path.exists(config_fname):
+        defaults_fname = os.path.join(PLUGIN_BASE_DIR, "defaults.json")
+        shutil.copyfile(defaults_fname, config_fname)
+
+    with open(config_fname, "rt") as fp:
         return json.load(fp)
 
 def run_completion_task():
