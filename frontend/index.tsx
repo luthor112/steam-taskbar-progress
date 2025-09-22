@@ -73,6 +73,13 @@ export default async function PluginMain() {
     console.log("[steam-taskbar-progress] Frontend startup");
     await App.WaitForServicesInitialized();
 
+    while (
+        typeof g_PopupManager === 'undefined' ||
+        typeof MainWindowBrowserManager === 'undefined'
+    ) {
+        await sleep(100);
+    }
+
     const oldDetection = await get_use_old_detection({});
     console.log("[steam-taskbar-progress] Use old detection method:", oldDetection);
 
