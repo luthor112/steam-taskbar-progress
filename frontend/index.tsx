@@ -95,7 +95,9 @@ export default async function PluginMain() {
 
         SteamClient.Downloads.RegisterForDownloadOverview(async (event) => {
             console.log(event);
-            if (event.paused) {
+            if (event.update_appid === 0) {
+                console.log("[steam-taskbar-progress] Ignoring appid 0");
+            } else if (event.paused) {
                 console.log("[steam-taskbar-progress] Download paused");
                 await set_progress_percent({ percent: -2 });
             } else if (event.update_state === "Downloading") {

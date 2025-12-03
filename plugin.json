@@ -4,6 +4,6 @@
     "name": "steam-taskbar-progress",
     "common_name": "Taskbar Download progress",
     "description": "Display the Steam download status on the Windows taskbar",
-    "version": "1.2.3",
+    "version": "1.2.4",
     "include": ["defaults.json"]
 }
