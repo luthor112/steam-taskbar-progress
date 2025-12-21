@@ -11,7 +11,7 @@ A Millennium plugin that displays the Steam download status on the Windows taskb
     - Right click the download indicator to use
 
 ## Configuration
-- `<STEAM>\plugins\steam-librarian\config.json`
+- `<STEAM>\plugins\steam-taskbar-progress\config.json`
 
 ## Prerequisites
 - [Millennium](https://steambrew.app/)
