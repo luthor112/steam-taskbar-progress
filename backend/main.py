@@ -16,29 +16,21 @@ if sys.platform == "win32":
 MAX_PROGRESS = 100
 
 completion_task = 0
-
-def get_config():
-    config_fname = os.path.join(PLUGIN_BASE_DIR, "config.json")
-    if not os.path.exists(config_fname):
-        defaults_fname = os.path.join(PLUGIN_BASE_DIR, "defaults.json")
-        shutil.copyfile(defaults_fname, config_fname)
-
-    with open(config_fname, "rt") as fp:
-        return json.load(fp)
+custom_command = ""
 
 def run_completion_task():
     global completion_task
+    global custom_command
     if completion_task == 1:
         subprocess.Popen(["shutdown", "/s", "/t", "0"])
         completion_task = 0
     elif completion_task == 2:
-        subprocess.Popen(get_config()["custom_command"])
+        subprocess.Popen(custom_command)
         completion_task = 0
 
 class Backend:
     @staticmethod
     def set_progress_percent(percent):
-        global completion_task
         logger.log(f"set_progress_percent({percent})")
 
         if sys.platform != "win32":
@@ -66,16 +58,12 @@ class Backend:
         return True
 
     @staticmethod
-    def get_use_old_detection():
-        use_old_detection = get_config()["use_old_detection"]
-        logger.log(f"get_use_old_detection() -> {use_old_detection}")
-        return use_old_detection
-
-    @staticmethod
-    def set_completion_task(new_value):
+    def set_completion_task(new_value, new_custom_command):
         global completion_task
-        logger.log(f"set_completion_task({new_value})")
+        global custom_command
+        logger.log(f"set_completion_task({new_value}, {new_custom_command})")
         completion_task = new_value
+        custom_command = new_custom_command
         return True
 
 class Plugin:

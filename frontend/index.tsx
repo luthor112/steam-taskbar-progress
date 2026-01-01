@@ -1,12 +1,16 @@
-import { callable, findClassModule, findModule, Millennium, Menu, MenuItem, showContextMenu, sleep } from "@steambrew/client";
+import { callable, findClassModule, findModule, Millennium, Menu, MenuItem, showContextMenu, sleep, IconsModule, definePlugin, Field, ToggleField, TextField } from "@steambrew/client";
 
 // Backend functions
 const set_progress_percent = callable<[{ percent: number }], boolean>('Backend.set_progress_percent');
-const get_use_old_detection = callable<[{}], boolean>('Backend.get_use_old_detection');
-const set_completion_task = callable<[{ new_value: number }], boolean>('Backend.set_completion_task');
+const set_completion_task = callable<[{ new_value: number, new_custom_command: string }], boolean>('Backend.set_completion_task');
 
 const WaitForElement = async (sel: string, parent = document) =>
-	[...(await Millennium.findElement(parent, sel))][0];
+    [...(await Millennium.findElement(parent, sel))][0];
+
+var pluginConfig = {
+    use_old_detection: false,
+    custom_command: ""
+};
 
 async function OnPopupCreation(popup: any) {
     console.log("[steam-taskbar-progress] Popup created, checking...");
@@ -14,7 +18,7 @@ async function OnPopupCreation(popup: any) {
         console.log("[steam-taskbar-progress] Main window found");
         const downloadStatusPlace = await WaitForElement(`div.${findModule(e => e.DownloadStatusContent).DownloadStatusContent}`, popup.m_popup.document);
 
-        const oldDetection = await get_use_old_detection({});
+        const oldDetection = pluginConfig.use_old_detection;
         if (oldDetection) {
             const downloadStatusPlaceObserver = new MutationObserver(async (mutationList, observer) => {
                 const downloadDetails = downloadStatusPlace.querySelector(`div.${findModule(e => e.DetailedDownloadProgress).DetailedDownloadProgress}`);
@@ -46,13 +50,13 @@ async function OnPopupCreation(popup: any) {
             showContextMenu(
                 <Menu label="Download Options">
                     <MenuItem onClick={async () => {
-                        await set_completion_task({ new_value: 1});
+                        await set_completion_task({ new_value: 1, new_custom_command: "" });
                     }}> Shutdown after completion </MenuItem>
                     <MenuItem onClick={async () => {
-                        await set_completion_task({ new_value: 2});
+                        await set_completion_task({ new_value: 2, new_custom_command: pluginConfig.custom_command });
                     }}> Run custom command after completion </MenuItem>
                     <MenuItem onClick={async () => {
-                        await set_completion_task({ new_value: 0});
+                        await set_completion_task({ new_value: 0, new_custom_command: "" });
                     }}> Do nothing after completion </MenuItem>
                     <MenuItem onClick={async () => {
                         SteamClient.Downloads.EnableAllDownloads(true);
@@ -69,9 +73,23 @@ async function OnPopupCreation(popup: any) {
     }
 }
 
-export default async function PluginMain() {
+const SettingsContent = () => {
+    return (
+        <div>
+            <Field label="Use old detection method" description="Use the old, observer-based detection" bottomSeparator="standard" focusable>
+                <input type="checkbox" defaultChecked={pluginConfig.use_old_detection} onChange={(e) => { pluginConfig.use_old_detection = e.currentTarget.checked; localStorage.setItem("luthor112.steam-taskbar-progress.config", JSON.stringify(pluginConfig)); }} />
+            </Field>
+            <Field label="Custom command" description="Command to run on download completion" bottomSeparator="standard" focusable>
+                <TextField defaultValue={pluginConfig.custom_command} onChange={(e: React.ChangeEvent<HTMLInputElement>) => { pluginConfig.custom_command = e.currentTarget.value; localStorage.setItem("luthor112.steam-taskbar-progress.config", JSON.stringify(pluginConfig)); }} />
+            </Field>
+        </div>
+    );
+};
+
+async function pluginMain() {
     console.log("[steam-taskbar-progress] Frontend startup");
     await App.WaitForServicesInitialized();
+    await sleep(100);
 
     while (
         typeof g_PopupManager === 'undefined' ||
@@ -80,8 +98,9 @@ export default async function PluginMain() {
         await sleep(100);
     }
 
-    const oldDetection = await get_use_old_detection({});
-    console.log("[steam-taskbar-progress] Use old detection method:", oldDetection);
+    const storedConfig = JSON.parse(localStorage.getItem("luthor112.steam-taskbar-progress.config"));
+    pluginConfig = { ...pluginConfig, ...storedConfig };
+    console.log("[steam-taskbar-progress] Merged config:", pluginConfig);
 
     const doc = g_PopupManager.GetExistingPopup("SP Desktop_uid0");
     if (doc) {
@@ -90,6 +109,7 @@ export default async function PluginMain() {
 
     g_PopupManager.AddPopupCreatedCallback(OnPopupCreation);
 
+    const oldDetection = pluginConfig.use_old_detection;
     if (!oldDetection) {
         var current_download_appid = 0;
 
@@ -123,3 +143,12 @@ export default async function PluginMain() {
         console.log("[steam-taskbar-progress] Using new detection method - registered for download events");
     }
 }
+
+export default definePlugin(async () => {
+    await pluginMain();
+    return {
+		title: "Taskbar Download progress",
+		icon: <IconsModule.Settings />,
+		content: <SettingsContent />,
+	};
+});
