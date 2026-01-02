@@ -15,8 +15,8 @@ importers:
         specifier: ^5.8.4
         version: 5.8.4
       '@steambrew/ttc':
-        specifier: ^2.8.6
-        version: 2.8.6(@babel/core@7.26.10)(typescript@4.9.5)
+        specifier: ^2.8.7
+        version: 2.8.7(@babel/core@7.26.10)(typescript@4.9.5)
       '@steambrew/webkit':
         specifier: ^5.8.4
         version: 5.8.4
@@ -1468,8 +1468,8 @@ packages:
   '@steambrew/client@5.8.4':
     resolution: {integrity: sha512-BhRO+DVR7qINbjDsIs374Idi1TTDFbFokN6Gvins2GzZlGKibNSSmk+1+8vJWF3BKil78lwJN+SsL54ZSV8wdg==}
 
-  '@steambrew/ttc@2.8.6':
-    resolution: {integrity: sha512-wy0aPenOjsqPi2Kl8nKD0oES+AK58QbIWlgkNsduo2v7cejbF4OeYPXAA8knyshDJQ0WgJK1meBldFzCaa7BoA==}
+  '@steambrew/ttc@2.8.7':
+    resolution: {integrity: sha512-CUy7R/I+1lHwxe9XJTpm1D3H0HlTYbtbcxvJdjFQPAXsVd6aDdM/+Zjwe5+OPoBfTKcv2ZYHxA5WCof8E0MdAw==}
     hasBin: true
 
   '@steambrew/webkit@5.8.4':
@@ -4187,7 +4187,7 @@ snapshots:
       typescript: 4.9.5
       url: 0.11.4
 
-  '@steambrew/ttc@2.8.6(@babel/core@7.26.10)(typescript@4.9.5)':
+  '@steambrew/ttc@2.8.7(@babel/core@7.26.10)(typescript@4.9.5)':
     dependencies:
       '@babel/parser': 7.28.5
       '@babel/preset-env': 7.28.5(@babel/core@7.26.10)
