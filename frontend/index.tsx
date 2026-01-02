@@ -1,4 +1,4 @@
-import { callable, findClassModule, findModule, Millennium, Menu, MenuItem, showContextMenu, sleep, IconsModule, definePlugin, Field, ToggleField, TextField } from "@steambrew/client";
+import { callable, findClassModule, findModule, Millennium, Menu, MenuItem, showContextMenu, sleep, IconsModule, definePlugin, Field, TextField } from "@steambrew/client";
 
 // Backend functions
 const set_progress_percent = callable<[{ percent: number }], boolean>('Backend.set_progress_percent');
@@ -74,13 +74,17 @@ async function OnPopupCreation(popup: any) {
 }
 
 const SettingsContent = () => {
+    const saveConfig = () => {
+        localStorage.setItem("luthor112.steam-taskbar-progress.config", JSON.stringify(pluginConfig));
+    };
+
     return (
         <div>
             <Field label="Use old detection method" description="Use the old, observer-based detection" bottomSeparator="standard" focusable>
-                <input type="checkbox" defaultChecked={pluginConfig.use_old_detection} onChange={(e) => { pluginConfig.use_old_detection = e.currentTarget.checked; localStorage.setItem("luthor112.steam-taskbar-progress.config", JSON.stringify(pluginConfig)); }} />
+                <input type="checkbox" defaultChecked={pluginConfig.use_old_detection} onChange={(e) => { pluginConfig.use_old_detection = e.currentTarget.checked; saveConfig(); }} />
             </Field>
             <Field label="Custom command" description="Command to run on download completion" bottomSeparator="standard" focusable>
-                <TextField defaultValue={pluginConfig.custom_command} onChange={(e: React.ChangeEvent<HTMLInputElement>) => { pluginConfig.custom_command = e.currentTarget.value; localStorage.setItem("luthor112.steam-taskbar-progress.config", JSON.stringify(pluginConfig)); }} />
+                <TextField defaultValue={pluginConfig.custom_command} onChange={(e: React.ChangeEvent<HTMLInputElement>) => { pluginConfig.custom_command = e.currentTarget.value; saveConfig(); }} />
             </Field>
         </div>
     );
