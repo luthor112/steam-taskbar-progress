@@ -1,10 +1,14 @@
 # Taskbar Download progress
 
-A Millennium plugin that displays the Steam download status on the Windows taskbar
+A Millennium plugin that displays the Steam download status on the Windows taskbar and adds some extra download-related functionality
+
+> [!WARNING]  
+> Displaying the download status on the Windows taskbar has been temporarily disabled, until the porting is finished
 
 ## Features
 - Displays the Steam download status on the Windows taskbar
     - This functionality is only supported on Windows
+    - Temporarily disabled, until the porting is finished
 - Shutdown or run a command when a download completes
     - Right click the download indicator to use
 - Pause or unpause all downloads
@@ -17,9 +21,6 @@ A Millennium plugin that displays the Steam download status on the Windows taskb
 ## Prerequisites
 - [Millennium](https://steambrew.app/)
 
-## Known issues:
-- First startup is slow because of dependency installation
-
 ## Contributors
 
 <a href="https://github.com/luthor112/steam-taskbar-progress/graphs/contributors">
@@ -29,5 +30,4 @@ A Millennium plugin that displays the Steam download status on the Windows taskb
 Made with [contrib.rocks](https://contrib.rocks).
 
 ## Troubleshooting
-
 - If the download progress is not picked up by the plugin, try turning on `Use old detection method` and restarting Steam

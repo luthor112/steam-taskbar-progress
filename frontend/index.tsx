@@ -1,8 +1,8 @@
 import { callable, findClassModule, findModule, Millennium, Menu, MenuItem, showContextMenu, sleep, IconsModule, definePlugin, Field, TextField } from "@steambrew/client";
 
 // Backend functions
-const set_progress_percent = callable<[{ percent: number }], boolean>('Backend.set_progress_percent');
-const set_completion_task = callable<[{ new_value: number, new_custom_command: string }], boolean>('Backend.set_completion_task');
+const set_progress_percent = callable<[{ percent: number }], boolean>('set_progress_percent');
+const set_completion_task = callable<[{ a_new_value: number, b_new_custom_command: string }], boolean>('set_completion_task');
 
 const WaitForElement = async (sel: string, parent = document) =>
     [...(await Millennium.findElement(parent, sel))][0];
@@ -50,13 +50,13 @@ async function OnPopupCreation(popup: any) {
             showContextMenu(
                 <Menu label="Download Options">
                     <MenuItem onClick={async () => {
-                        await set_completion_task({ new_value: 1, new_custom_command: "" });
+                        await set_completion_task({ a_new_value: 1, b_new_custom_command: "" });
                     }}> Shutdown after completion </MenuItem>
                     <MenuItem onClick={async () => {
-                        await set_completion_task({ new_value: 2, new_custom_command: pluginConfig.custom_command });
+                        await set_completion_task({ a_new_value: 2, b_new_custom_command: pluginConfig.custom_command });
                     }}> Run custom command after completion </MenuItem>
                     <MenuItem onClick={async () => {
-                        await set_completion_task({ new_value: 0, new_custom_command: "" });
+                        await set_completion_task({ a_new_value: 0, b_new_custom_command: "" });
                     }}> Do nothing after completion </MenuItem>
                     <MenuItem onClick={async () => {
                         SteamClient.Downloads.EnableAllDownloads(true);
