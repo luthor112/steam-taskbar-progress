@@ -73,19 +73,31 @@ async function OnPopupCreation(popup: any) {
     }
 }
 
-const SettingsContent = () => {
+const SingleSetting = (props) => {
     const saveConfig = () => {
         localStorage.setItem("luthor112.steam-taskbar-progress.config", JSON.stringify(pluginConfig));
     };
 
+    if (props.type === "bool") {
+        return (
+            <Field label={props.label} description={props.description} bottomSeparator="standard" focusable>
+                <input type="checkbox" defaultChecked={pluginConfig[props.name]} onChange={(e) => { pluginConfig[props.name] = e.currentTarget.checked; saveConfig(); }} />
+            </Field>
+        );
+    } else if (props.type === "text") {
+        return (
+            <Field label={props.label} description={props.description} bottomSeparator="standard" focusable>
+                <TextField defaultValue={pluginConfig[props.name]} onChange={(e: React.ChangeEvent<HTMLInputElement>) => { pluginConfig[props.name] = e.currentTarget.value; saveConfig(); }} />
+            </Field>
+        );
+    }
+}
+
+const SettingsContent = () => {
     return (
         <div>
-            <Field label="Use old detection method" description="Use the old, observer-based detection" bottomSeparator="standard" focusable>
-                <input type="checkbox" defaultChecked={pluginConfig.use_old_detection} onChange={(e) => { pluginConfig.use_old_detection = e.currentTarget.checked; saveConfig(); }} />
-            </Field>
-            <Field label="Custom command" description="Command to run on download completion" bottomSeparator="standard" focusable>
-                <TextField defaultValue={pluginConfig.custom_command} onChange={(e: React.ChangeEvent<HTMLInputElement>) => { pluginConfig.custom_command = e.currentTarget.value; saveConfig(); }} />
-            </Field>
+            <SingleSetting name="use_old_detection" type="bool" label="Use old detection method" description="Use the old, observer-based detection" />
+            <SingleSetting name="custom_command" type="text" label="Custom command" description="Command to run on download completion" />
         </div>
     );
 };
