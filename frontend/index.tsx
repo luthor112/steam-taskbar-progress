@@ -1,4 +1,5 @@
-import { callable, findClassModule, findModule, Millennium, Menu, MenuItem, showContextMenu, sleep, IconsModule, definePlugin, Field, TextField } from "@steambrew/client";
+import { callable, findClassModule, findModule, Millennium, Menu, MenuItem, showContextMenu, sleep, IconsModule, definePlugin, Field, TextField, Toggle } from "@steambrew/client";
+import React, { useState, useEffect } from "react";
 
 // Backend functions
 const set_progress_percent = callable<[{ percent: number }], boolean>('set_progress_percent');
@@ -74,14 +75,22 @@ async function OnPopupCreation(popup: any) {
 }
 
 const SingleSetting = (props) => {
+    const [boolValue, setBoolValue] = useState(false);
+
     const saveConfig = () => {
         localStorage.setItem("luthor112.steam-taskbar-progress.config", JSON.stringify(pluginConfig));
     };
 
+    useEffect(() => {
+        if (props.type === "bool") {
+            setBoolValue(pluginConfig[props.name]);
+        }
+    }, []);
+
     if (props.type === "bool") {
         return (
             <Field label={props.label} description={props.description} bottomSeparator="standard" focusable>
-                <input type="checkbox" defaultChecked={pluginConfig[props.name]} onChange={(e) => { pluginConfig[props.name] = e.currentTarget.checked; saveConfig(); }} />
+                <Toggle value={boolValue} onChange={(value) => { setBoolValue(value); pluginConfig[props.name] = value; saveConfig(); }} />
             </Field>
         );
     } else if (props.type === "text") {
