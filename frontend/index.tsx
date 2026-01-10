@@ -3,14 +3,12 @@ import React, { useState, useEffect } from "react";
 
 // Backend functions
 const set_progress_percent = callable<[{ percent: number }], boolean>('set_progress_percent');
-const set_completion_task = callable<[{ a_new_value: number, b_new_custom_command: string }], boolean>('set_completion_task');
 
 const WaitForElement = async (sel: string, parent = document) =>
     [...(await Millennium.findElement(parent, sel))][0];
 
 var pluginConfig = {
-    use_old_detection: false,
-    custom_command: ""
+    use_old_detection: false
 };
 
 async function OnPopupCreation(popup: any) {
@@ -44,33 +42,6 @@ async function OnPopupCreation(popup: any) {
             downloadStatusPlaceObserver.observe(downloadStatusPlace, { childList: true, attributes: true, subtree: true });
             console.log("[steam-taskbar-progress] Using old detection method - observer started");
         }
-
-        // Add menu
-        downloadStatusPlace.addEventListener("contextmenu", async () => {
-            console.log("[steam-taskbar-progress] Right click detected, showing context menu...");
-            showContextMenu(
-                <Menu label="Download Options">
-                    <MenuItem onClick={async () => {
-                        await set_completion_task({ a_new_value: 1, b_new_custom_command: "" });
-                    }}> Shutdown after completion </MenuItem>
-                    <MenuItem onClick={async () => {
-                        await set_completion_task({ a_new_value: 2, b_new_custom_command: pluginConfig.custom_command });
-                    }}> Run custom command after completion </MenuItem>
-                    <MenuItem onClick={async () => {
-                        await set_completion_task({ a_new_value: 0, b_new_custom_command: "" });
-                    }}> Do nothing after completion </MenuItem>
-                    <MenuItem onClick={async () => {
-                        SteamClient.Downloads.EnableAllDownloads(true);
-                    }}> Unpause all downloads </MenuItem>
-                    <MenuItem onClick={async () => {
-                        SteamClient.Downloads.EnableAllDownloads(false);
-                    }}> Pause all downloads </MenuItem>
-                </Menu>,
-                downloadStatusPlace,
-                { bForcePopup: true }
-            );
-        });
-        console.log("[steam-taskbar-progress] Registered for right click");
     }
 }
 
@@ -106,7 +77,6 @@ const SettingsContent = () => {
     return (
         <div>
             <SingleSetting name="use_old_detection" type="bool" label="Use old detection method" description="Use the old, observer-based detection" />
-            <SingleSetting name="custom_command" type="text" label="Custom command" description="Command to run on download completion" />
         </div>
     );
 };

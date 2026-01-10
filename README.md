@@ -1,18 +1,14 @@
 # Taskbar Download progress
 
-A Millennium plugin that displays the Steam download status on the Windows taskbar and adds some extra download-related functionality
+A Millennium plugin that displays the Steam download status on the Windows taskbar.
 
 > [!WARNING]  
-> Displaying the download status on the Windows taskbar has been temporarily disabled, until the porting is finished
+> The plugin is Temporarily non-functional, until porting is finished
 
 ## Features
 - Displays the Steam download status on the Windows taskbar
     - This functionality is only supported on Windows
-    - Temporarily disabled, until the porting is finished
-- Shutdown or run a command when a download completes
-    - Right click the download indicator to use
-- Pause or unpause all downloads
-    - Right click the download indicator to use
+    - Temporarily disabled, until porting is finished
 
 ## Configuration
 - Configuration options are available through the Millennium Library Manager
