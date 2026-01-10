@@ -12,7 +12,7 @@
   },
   "type": "module",
   "name": "steam-taskbar-progress",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Display the Steam download status on the Windows taskbar",
   "main": "./frontend/index.jsx",
   "author": "luthor112",
