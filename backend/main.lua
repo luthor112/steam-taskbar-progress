@@ -51,8 +51,12 @@ HRESULT __stdcall CoInitializeEx(LPVOID pvReserved, DWORD dwCoInit);
 HRESULT __stdcall CoCreateInstance(const CLSID* rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, const IID* riid, LPVOID *ppv);
 ]]
 
+logger:info("Passed CDEF")
+
 local user32 = ffi.load("user32")
 local ole32 = ffi.load("ole32")
+logger:info("Native libraries loaded")
+
 local CLSID_TaskbarList = ffi.new("CLSID", {
   Data1 = 0x56FDF344,
   Data2 = 0xFD6D,
@@ -78,11 +82,12 @@ local TBPF_ERROR = 4
 local TBPF_PAUSED = 8
 local MAX_PROGRESS = 100
 local steam_hwnd = nil
+local title = ffi.new("char[16]")
+logger:info("Most global variables have been defined")
 
 local window_enum_callback = ffi.cast("WNDENUMPROC", function(hwnd, lParam)
     if user32.IsWindowVisible(hwnd) == 0 then return 1 end
 
-    local title = ffi.new("char[16]")
     user32.GetWindowTextA(hwnd, title, 16)
     if ffi.string(title):lower() == "steam" then
         steam_hwnd = hwnd
@@ -91,8 +96,10 @@ local window_enum_callback = ffi.cast("WNDENUMPROC", function(hwnd, lParam)
 
     return 1
 end)
+logger:info("WNDENUMPROC has been defined")
 
 ole32.CoInitializeEx(nil, 2)
+logger:info("COM Init done")
 local ppv = ffi.new("void*[1]")
 local hr = ole32.CoCreateInstance(CLSID_TaskbarList, nil, 1, IID_ITaskbarList, ppv)
 logger:info(string.format("CoCreateInstance hr = 0x%08X", hr))
@@ -100,9 +107,12 @@ local tb = ffi.cast("ITaskbarList3*", ppv[0])
 local hr2 = tb.lpVtbl.QueryInterface(tb, IID_ITaskbarList3, ppv)
 logger:info(string.format("QueryInterface hr = 0x%08X", hr2))
 tb = ffi.cast("ITaskbarList3*", ppv[0])
+logger:info("ITaskbarList3 acquired")
 tb.lpVtbl.HrInit(tb)
+logger:info("HrInit done")
 
 local function find_steam()
+    steam_hwnd = nil
     user32.EnumWindows(window_enum_callback, 0)
     if steam_hwnd ~= nil and steam_hwnd ~= ffi.NULL then
         logger:info(string.format("Found Steam HWND: %p", steam_hwnd))
@@ -129,6 +139,7 @@ function set_progress_percent(percent)
         tb.lpVtbl.SetProgressValue(tb, steam_hwnd, percent, MAX_PROGRESS)
     end
 
+    logger:info("Progress set")
     return true
 end
 

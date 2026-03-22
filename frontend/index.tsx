@@ -12,6 +12,7 @@ var pluginConfig = {
 };
 
 async function OnPopupCreation(popup: any) {
+    await sleep(10000);
     console.log("[steam-taskbar-progress] Popup created, checking...");
     if (popup.m_strName === "SP Desktop_uid0") {
         console.log("[steam-taskbar-progress] Main window found");
@@ -81,31 +82,17 @@ const SettingsContent = () => {
     );
 };
 
-async function pluginMain() {
+export default definePlugin(async () => {
     console.log("[steam-taskbar-progress] Frontend startup");
-    await App.WaitForServicesInitialized();
-    await sleep(100);
-
-    while (
-        typeof g_PopupManager === 'undefined' ||
-        typeof MainWindowBrowserManager === 'undefined'
-    ) {
-        await sleep(100);
-    }
 
     const storedConfig = JSON.parse(localStorage.getItem("luthor112.steam-taskbar-progress.config"));
     pluginConfig = { ...pluginConfig, ...storedConfig };
     console.log("[steam-taskbar-progress] Merged config:", pluginConfig);
 
-    const doc = g_PopupManager.GetExistingPopup("SP Desktop_uid0");
-    if (doc) {
-        OnPopupCreation(doc);
-    }
-
-    g_PopupManager.AddPopupCreatedCallback(OnPopupCreation);
-
     const oldDetection = pluginConfig.use_old_detection;
-    if (!oldDetection) {
+    if (oldDetection) {
+        Millennium.AddWindowCreateHook(OnPopupCreation);
+    } else {
         var current_download_appid = 0;
 
         SteamClient.Downloads.RegisterForDownloadOverview(async (event) => {
@@ -137,10 +124,7 @@ async function pluginMain() {
 
         console.log("[steam-taskbar-progress] Using new detection method - registered for download events");
     }
-}
 
-export default definePlugin(async () => {
-    await pluginMain();
     return {
 		title: "Taskbar Download progress",
 		icon: <IconsModule.Settings />,
