@@ -1,13 +1,17 @@
-import { callable, findClassModule, findModule, Millennium, Menu, MenuItem, showContextMenu, sleep, IconsModule, definePlugin, Field, TextField, Toggle } from "@steambrew/client";
+import { callable, findModule, Millennium, sleep, IconsModule, definePlugin, Field, TextField, Toggle } from "@steambrew/client";
 import React, { useState, useEffect } from "react";
 
 // Backend functions
 const set_progress_percent = callable<[{ percent: number }], boolean>('set_progress_percent');
 
-const WaitForElement = async (sel: string, parent = document) =>
-    [...(await Millennium.findElement(parent, sel))][0];
+const WaitForElement = async (sel: string, parent: Document | Element = document) =>
+    [...(await Millennium.findElement(parent as Document, sel))][0];
 
-var pluginConfig = {
+type PluginConfig = {
+    use_old_detection: boolean;
+}
+
+var pluginConfig: PluginConfig = {
     use_old_detection: false
 };
 
@@ -21,9 +25,12 @@ async function OnPopupCreation(popup: any) {
         const oldDetection = pluginConfig.use_old_detection;
         if (oldDetection) {
             const downloadStatusPlaceObserver = new MutationObserver(async (mutationList, observer) => {
+                void mutationList;
+                void observer;
+
                 const downloadDetails = downloadStatusPlace.querySelector(`div.${findModule(e => e.DetailedDownloadProgress).DetailedDownloadProgress}`);
                 if (downloadDetails) {
-                    const downloadProgressBar = await WaitForElement(`div.${findModule(e => e.AnimateProgress).AnimateProgress}`, downloadDetails);
+                    const downloadProgressBar = await WaitForElement(`div.${findModule(e => e.AnimateProgress).AnimateProgress}`, downloadDetails) as HTMLElement;
                     const fromPercent = downloadProgressBar.style.cssText.substring(downloadProgressBar.style.cssText.indexOf("--percent:"));
                     const realPercent = Number(fromPercent.substring(11, fromPercent.indexOf(";")))*100;
 
@@ -46,7 +53,19 @@ async function OnPopupCreation(popup: any) {
     }
 }
 
-const SingleSetting = (props) => {
+type BoolKeys = {
+    [K in keyof PluginConfig]: PluginConfig[K] extends boolean ? K : never
+  }[keyof PluginConfig];
+  
+type StringKeys = {
+    [K in keyof PluginConfig]: PluginConfig[K] extends string ? K : never
+}[keyof PluginConfig];
+
+type SingleSettingProps =
+  | { type: "bool"; name: BoolKeys; label: string; description: string }
+  | { type: "text"; name: StringKeys; label: string; description: string };
+
+const SingleSetting = (props: SingleSettingProps) => {
     const [boolValue, setBoolValue] = useState(false);
 
     const saveConfig = () => {
@@ -68,8 +87,12 @@ const SingleSetting = (props) => {
     } else if (props.type === "text") {
         return (
             <Field label={props.label} description={props.description} bottomSeparator="standard" focusable>
-                <TextField defaultValue={pluginConfig[props.name]} onChange={(e: React.ChangeEvent<HTMLInputElement>) => { pluginConfig[props.name] = e.currentTarget.value; saveConfig(); }} />
+                <TextField defaultValue={pluginConfig[props.name]} onChange={(e: React.ChangeEvent<HTMLInputElement>) => { (pluginConfig as any)[props.name] = e.currentTarget.value; saveConfig(); }} />
             </Field>
+        );
+    } else {
+        return (
+            <div>This should not happen...</div>
         );
     }
 }
@@ -85,13 +108,14 @@ const SettingsContent = () => {
 export default definePlugin(async () => {
     console.log("[steam-taskbar-progress] Frontend startup");
 
-    const storedConfig = JSON.parse(localStorage.getItem("luthor112.steam-taskbar-progress.config"));
+    const rawValue = localStorage.getItem("luthor112.steam-taskbar-progress.config");
+    const storedConfig: Partial<PluginConfig> = rawValue ? JSON.parse(rawValue) : {};
     pluginConfig = { ...pluginConfig, ...storedConfig };
     console.log("[steam-taskbar-progress] Merged config:", pluginConfig);
 
     const oldDetection = pluginConfig.use_old_detection;
     if (oldDetection) {
-        Millennium.AddWindowCreateHook(OnPopupCreation);
+        Millennium.AddWindowCreateHook!(OnPopupCreation);
     } else {
         var current_download_appid = 0;
 
@@ -102,9 +126,9 @@ export default definePlugin(async () => {
             } else if (event.paused) {
                 console.log("[steam-taskbar-progress] Download paused");
                 await set_progress_percent({ percent: -2 });
-            } else if (event.update_state === "Downloading") {
-                console.log("[steam-taskbar-progress] Download percentage:", event.overall_percent_complete);
-                await set_progress_percent({ percent: event.overall_percent_complete });
+            } else if (event.update_state as string === "Downloading") {
+                console.log("[steam-taskbar-progress] Download percentage:", (event as any).overall_percent_complete);
+                await set_progress_percent({ percent: (event as any).overall_percent_complete });
                 current_download_appid = event.update_appid;
             } else {
                 console.log("[steam-taskbar-progress] No download in progress");
@@ -113,6 +137,8 @@ export default definePlugin(async () => {
         });
 
         SteamClient.Downloads.RegisterForDownloadItems(async (isDownloading, downloadItems) => {
+            void isDownloading;
+
             const current_app = downloadItems.find((el) => el.appid === current_download_appid);
             if (current_app) {
                 if (current_app.completed) {
