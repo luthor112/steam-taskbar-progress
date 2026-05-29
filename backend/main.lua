@@ -2,6 +2,37 @@ local logger = require("logger")
 local millennium = require("millennium")
 local ffi = require("ffi")
 
+-- PLUGIN MANAGEMENT
+
+local plugin_status = ""
+local plugin_ready = false
+
+local function set_plugin_status(status_message, plugin_okay)
+    plugin_status = status_message
+    if plugin_okay then
+        logger:info(status_message)
+    else
+        logger:error(status_message)
+    end
+end
+
+local function on_frontend_loaded()
+    logger:info("Frontend loaded")
+end
+
+local function on_load()
+    logger:info("Backend loaded")
+    millennium.ready()
+end
+
+local function on_unload()
+    --tb.lpVtbl.Release(tb)
+    --window_enum_callback = nil
+    logger:info("Backend unloaded")
+end
+
+-- STARTUP
+
 ffi.cdef[[
 typedef struct {
   uint32_t Data1;
@@ -51,11 +82,16 @@ HRESULT __stdcall CoInitializeEx(LPVOID pvReserved, DWORD dwCoInit);
 HRESULT __stdcall CoCreateInstance(const CLSID* rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, const IID* riid, LPVOID *ppv);
 ]]
 
-logger:info("Passed CDEF")
+set_plugin_status("Passed CDEF", true)
 
-local user32 = ffi.load("user32")
-local ole32 = ffi.load("ole32")
-logger:info("Native libraries loaded")
+local user32_ok, user32 = pcall(ffi.load, "user32")
+local ole32_ok, ole32 = pcall(ffi.load, "ole32")
+if user32_ok and ole32_ok then
+    set_plugin_status("Native libraries loaded", true)
+else
+    set_plugin_status("Native libraries NOT loaded", false)
+    return { on_frontend_loaded = on_frontend_loaded, on_load = on_load, on_unload = on_unload }
+end
 
 local CLSID_TaskbarList = ffi.new("CLSID", {
   Data1 = 0x56FDF344,
@@ -83,7 +119,7 @@ local TBPF_PAUSED = 8
 local MAX_PROGRESS = 100
 local steam_hwnd = nil
 local title = ffi.new("char[16]")
-logger:info("Most global variables have been defined")
+set_plugin_status("Most variables have been set", true)
 
 local window_enum_callback = ffi.cast("WNDENUMPROC", function(hwnd, lParam)
     if user32.IsWindowVisible(hwnd) == 0 then return 1 end
@@ -96,20 +132,44 @@ local window_enum_callback = ffi.cast("WNDENUMPROC", function(hwnd, lParam)
 
     return 1
 end)
-logger:info("WNDENUMPROC has been defined")
+set_plugin_status("WNDENUMPROC has been defined", true)
 
-ole32.CoInitializeEx(nil, 2)
-logger:info("COM Init done")
+local hr0 = ole32.CoInitializeEx(nil, 2)
+if hr0 >= 0 then
+    set_plugin_status("COM Init done", true)
+else
+    set_plugin_status("COM Init failed", false)
+    return { on_frontend_loaded = on_frontend_loaded, on_load = on_load, on_unload = on_unload }
+end
+
 local ppv = ffi.new("void*[1]")
 local hr = ole32.CoCreateInstance(CLSID_TaskbarList, nil, 1, IID_ITaskbarList, ppv)
 logger:info(string.format("CoCreateInstance hr = 0x%08X", hr))
+if hr == 0 then
+    set_plugin_status("CoCreateInstance successful", true)
+else
+    set_plugin_status("CoCreateInstance failed", false)
+    return { on_frontend_loaded = on_frontend_loaded, on_load = on_load, on_unload = on_unload }
+end
+
 local tb = ffi.cast("ITaskbarList3*", ppv[0])
 local hr2 = tb.lpVtbl.QueryInterface(tb, IID_ITaskbarList3, ppv)
 logger:info(string.format("QueryInterface hr = 0x%08X", hr2))
+if hr2 == 0 then
+    set_plugin_status("QueryInterface successful", true)
+else
+    set_plugin_status("QueryInterface falied", false)
+    return { on_frontend_loaded = on_frontend_loaded, on_load = on_load, on_unload = on_unload }
+end
+
 tb = ffi.cast("ITaskbarList3*", ppv[0])
-logger:info("ITaskbarList3 acquired")
-tb.lpVtbl.HrInit(tb)
-logger:info("HrInit done")
+local hr3 = tb.lpVtbl.HrInit(tb)
+if hr3 == 0 then
+    set_plugin_status("HrInit successful", true)
+else
+    set_plugin_status("HrInit failed", false)
+    return { on_frontend_loaded = on_frontend_loaded, on_load = on_load, on_unload = on_unload }
+end
 
 local function find_steam()
     steam_hwnd = nil
@@ -124,6 +184,11 @@ end
 -- INTERFACES
 
 function set_progress_percent(percent)
+    if not plugin_ready then
+        logger:error("Plugin not ready")
+        return false
+    end
+
     logger:info("Progress at " .. percent)
 
     if not find_steam() then return false end
@@ -143,25 +208,13 @@ function set_progress_percent(percent)
     return true
 end
 
--- PLUGIN MANAGEMENT
-
-local function on_frontend_loaded()
-    logger:info("Frontend loaded")
+function get_plugin_status()
+    if plugin_ready then
+        return "Ready"
+    else
+        return "Not ready: " .. plugin_status
+    end
 end
 
-local function on_load()
-    logger:info("Backend loaded")
-    millennium.ready()
-end
-
-local function on_unload()
-    tb.lpVtbl.Release(tb)
-    window_enum_callback = nil
-    logger:info("Backend unloaded")
-end
-
-return {
-    on_frontend_loaded = on_frontend_loaded,
-    on_load = on_load,
-    on_unload = on_unload
-}
+plugin_ready = true
+return { on_frontend_loaded = on_frontend_loaded, on_load = on_load, on_unload = on_unload }
