@@ -1,8 +1,9 @@
-import { callable, findModule, Millennium, sleep, IconsModule, definePlugin, Field, TextField, Toggle } from "@steambrew/client";
+import { callable, findModule, Millennium, sleep, DialogButton, IconsModule, definePlugin, Field, TextField, Toggle } from "@steambrew/client";
 import React, { useState, useEffect } from "react";
 
 // Backend functions
 const set_progress_percent = callable<[{ percent: number }], boolean>('set_progress_percent');
+const get_plugin_status = callable<[{}], string>('get_plugin_status');
 
 const WaitForElement = async (sel: string, parent: Document | Element = document) =>
     [...(await Millennium.findElement(parent as Document, sel))][0];
@@ -101,6 +102,11 @@ const SettingsContent = () => {
     return (
         <div>
             <SingleSetting name="use_old_detection" type="bool" label="Use old detection method" description="Use the old, observer-based detection" />
+            <DialogButton onClick={async (e) => {
+                const statusTag = (e.target as HTMLElement).ownerDocument.createElement("div");
+                statusTag.innerText = await get_plugin_status({});
+                (e.target as HTMLElement).parentElement!.appendChild(statusTag);
+            }}>Query Plugin Status</DialogButton>
         </div>
     );
 };
