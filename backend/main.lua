@@ -124,10 +124,11 @@ set_plugin_status("Most variables have been set", true)
 local window_enum_callback = ffi.cast("WNDENUMPROC", function(hwnd, lParam)
     if user32.IsWindowVisible(hwnd) == 0 then return 1 end
 
-    user32.GetWindowTextA(hwnd, title, 16)
-    if ffi.string(title):lower() == "steam" then
-        steam_hwnd = hwnd
-        return 0
+    if user32.GetWindowTextA(hwnd, title, 16) == 5 then
+        if ffi.string(title):lower() == "steam" then
+            steam_hwnd = hwnd
+            return 0
+        end
     end
 
     return 1
