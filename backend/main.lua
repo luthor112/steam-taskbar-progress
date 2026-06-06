@@ -48,7 +48,7 @@ typedef void* LPVOID;
 typedef void* LPUNKNOWN;
 typedef const void* REFCLSID;
 typedef const void* REFIID;
-typedef long LPARAM;
+typedef intptr_t LPARAM;
 typedef long HRESULT;
 typedef unsigned long ULONG;
 typedef unsigned long DWORD;
@@ -72,7 +72,7 @@ typedef struct {
 } ITaskbarList3Vtbl;
 struct ITaskbarList3 { ITaskbarList3Vtbl* lpVtbl; };
 
-typedef int (__stdcall *WNDENUMPROC)(HWND, LPARAM);
+typedef BOOL (__stdcall *WNDENUMPROC)(HWND, LPARAM);
 
 BOOL __stdcall EnumWindows(WNDENUMPROC lpEnumFunc, LPARAM lParam);
 int __stdcall GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount);
@@ -124,8 +124,9 @@ set_plugin_status("Most variables have been set", true)
 local window_enum_callback = ffi.cast("WNDENUMPROC", function(hwnd, lParam)
     if user32.IsWindowVisible(hwnd) == 0 then return 1 end
 
-    if user32.GetWindowTextA(hwnd, title, 16) == 5 then
-        if ffi.string(title):lower() == "steam" then
+    local len = user32.GetWindowTextA(hwnd, title, 16)
+    if len == 5 then
+        if ffi.string(title, len) == "Steam" then
             steam_hwnd = hwnd
             return 0
         end
