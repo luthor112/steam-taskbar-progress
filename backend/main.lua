@@ -80,13 +80,16 @@ BOOL __stdcall IsWindowVisible(HWND hWnd);
 BOOL __stdcall FlashWindow(HWND hWnd, BOOL bInvert);
 HRESULT __stdcall CoInitializeEx(LPVOID pvReserved, DWORD dwCoInit);
 HRESULT __stdcall CoCreateInstance(const CLSID* rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, const IID* riid, LPVOID *ppv);
+
+int strncmp(const char *s1, const char *s2, size_t n);
 ]]
 
 set_plugin_status("Passed CDEF", true)
 
 local user32_ok, user32 = pcall(ffi.load, "user32")
 local ole32_ok, ole32 = pcall(ffi.load, "ole32")
-if user32_ok and ole32_ok then
+local msvcrt_ok, msvcrt = pcall(ffi.load, "msvcrt")
+if user32_ok and ole32_ok and msvcrt_ok then
     set_plugin_status("Native libraries loaded", true)
 else
     set_plugin_status("Native libraries NOT loaded", false)
@@ -119,17 +122,17 @@ local TBPF_PAUSED = 8
 local MAX_PROGRESS = 100
 local steam_hwnd = nil
 local title = ffi.new("char[16]")
+local search_title = ffi.new("char[16]")
+ffi.copy(search_title, "Steam")
 set_plugin_status("Most variables have been set", true)
 
 local window_enum_callback = ffi.cast("WNDENUMPROC", function(hwnd, lParam)
     if user32.IsWindowVisible(hwnd) == 0 then return 1 end
 
     local len = user32.GetWindowTextA(hwnd, title, 16)
-    if len == 5 then
-        if ffi.string(title, len) == "Steam" then
-            steam_hwnd = hwnd
-            return 0
-        end
+    if len == 5 and msvcrt.strncmp(title, search_title, 5) == 0 then
+        steam_hwnd = hwnd
+        return 0
     end
 
     return 1
