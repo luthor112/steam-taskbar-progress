@@ -3,8 +3,10 @@ import { callable, IconsModule, definePlugin, pluginSelf, DownloadItem } from '@
 const setTaskbarProgressPercentage = callable<[{ percent: number }], boolean>('set_progress_percent');
 
 async function onDownloadOverview(event: any) {
-	console.log(event);
+	console.log("[steam-taskbar-progress] onDownloadOverview:", event);
 	const state: string = event.update_state;
+
+	console.log('[steam-taskbar-progress] Appid: ', event.update_appid);
 
 	if (event.update_appid === 0) {
 		console.log('[steam-taskbar-progress] Ignoring appid 0');
@@ -30,11 +32,14 @@ async function onDownloadOverview(event: any) {
 	await setTaskbarProgressPercentage({ percent: -1 });
 }
 
-async function onDownloadItems(isDownloading: boolean, downloadItems: DownloadItem[]) {
-	void isDownloading;
+async function onDownloadItems(isDownloading: boolean, downloadItems: any) {
+	//void isDownloading;
+	console.log("[steam-taskbar-progress] onDownloadItems isDownloading:", isDownloading);
+	console.log("[steam-taskbar-progress] onDownloadItems downloadItems:", downloadItems);
 
-	const current_app = downloadItems.find((el) => el.appid === pluginSelf.current_download_appid);
-	if (current_app) {
+	const current_app_item = downloadItems.find((el: any) => (el.item_data[0] as DownloadItem).appid === pluginSelf.current_download_appid);
+	if (current_app_item) {
+		const current_app = current_app_item.item_data[0] as DownloadItem;
 		if (current_app.completed) {
 			await setTaskbarProgressPercentage({ percent: 100 });
 			pluginSelf.current_download_appid = 0;
