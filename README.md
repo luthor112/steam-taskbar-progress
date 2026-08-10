@@ -2,6 +2,8 @@
 
 A Millennium plugin that displays the Steam download status on the Windows taskbar.
 
+![Steam on the Taskbar](screenshots/taskbar.png)
+
 ## Features
 - Displays the Steam download status on the Windows taskbar
     - This functionality is only supported on Windows
